@@ -35,7 +35,7 @@ final class HealthController extends Controller
             }
 
             try {
-                $response      = Http::timeout(3)->get("{$url}/health");
+                $response      = Http::timeout((int) env('GATEWAY_HEALTH_TIMEOUT', 5))->get("{$url}/health");
                 $isHealthy     = $response->successful() && ($response->json('status') === 'healthy');
                 $checks[$name] = [
                     'status'  => $isHealthy,

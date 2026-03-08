@@ -52,7 +52,7 @@ final class GatewayController extends Controller
         }
 
         $httpRequest = Http::withHeaders($this->forwardHeaders($request))
-            ->timeout(30);
+            ->timeout((int) env('GATEWAY_PROXY_TIMEOUT', 30));
 
         $response = match (strtoupper($request->method())) {
             'GET'    => $httpRequest->get($targetUrl),

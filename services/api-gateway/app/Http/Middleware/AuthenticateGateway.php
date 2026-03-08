@@ -40,9 +40,10 @@ final class AuthenticateGateway
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        // Cache token validation result for 60 seconds to reduce auth service load
+        // Cache token validation result to reduce auth service load (configurable via AUTH_CACHE_TTL)
+        $cacheTtl = (int) env('AUTH_CACHE_TTL', 60);
         $cacheKey = 'gateway:token:' . hash('sha256', $token);
-        $user     = Cache::remember($cacheKey, 60, function () use ($token): ?array {
+        $user     = Cache::remember($cacheKey, $cacheTtl, function () use ($token): ?array {
             $authUrl  = config('services.auth.url', env('AUTH_SERVICE_URL'));
             $response = Http::withToken($token)
                 ->withHeaders(['X-Tenant-ID' => request()->header('X-Tenant-ID', '')])
