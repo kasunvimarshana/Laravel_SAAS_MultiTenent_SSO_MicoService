@@ -65,7 +65,7 @@ trait CanPaginate
             total:       $total,
             perPage:     $perPage,
             currentPage: $page,
-            options:     ['path' => request()?->url() ?? '/']
+            options:     ['path' => (function_exists('request') && request() !== null) ? request()->url() : '/']
         );
     }
 }

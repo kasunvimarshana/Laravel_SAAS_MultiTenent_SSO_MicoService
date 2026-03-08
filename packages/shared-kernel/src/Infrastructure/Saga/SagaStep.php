@@ -10,16 +10,25 @@ namespace Saas\SharedKernel\Infrastructure\Saga;
  */
 final class SagaStep
 {
+    /** @var callable */
+    private $execute;
+
+    /** @var callable */
+    private $compensate;
+
     /**
      * @param  string   $name       Human-readable step name (for logging)
      * @param  callable $execute    The forward action to run
      * @param  callable $compensate The compensating/rollback action to run on failure
      */
     public function __construct(
-        private readonly string   $name,
-        private readonly callable $execute,
-        private readonly callable $compensate
-    ) {}
+        private readonly string $name,
+        callable $execute,
+        callable $compensate
+    ) {
+        $this->execute    = $execute;
+        $this->compensate = $compensate;
+    }
 
     public function getName(): string
     {

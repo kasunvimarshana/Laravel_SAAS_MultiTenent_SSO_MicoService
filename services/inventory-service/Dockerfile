@@ -35,13 +35,13 @@ RUN pecl install redis && docker-php-ext-enable redis
 
 COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
 
-COPY ../../docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
-COPY ../../docker/php/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY ../../docker/nginx/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/php/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/nginx/nginx.conf /etc/nginx/http.d/default.conf
 
 WORKDIR /var/www/html
 
-COPY . .
+COPY services/inventory-service/ .
 
 RUN composer install --no-dev --optimize-autoloader
 
