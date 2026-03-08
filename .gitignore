@@ -6,7 +6,7 @@ vendor/
 .env
 */.env
 !.env.example
-*/.env.example
+!*/.env.example
 
 # Laravel cache
 bootstrap/cache/

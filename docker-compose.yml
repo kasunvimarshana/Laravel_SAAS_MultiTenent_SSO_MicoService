@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   saas_network:
     driver: bridge
@@ -114,7 +112,7 @@ services:
       - mysql
       - redis
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
       - APP_KEY=${API_GATEWAY_APP_KEY}
     volumes:
       - ./services/api-gateway:/var/www/html
@@ -133,7 +131,7 @@ services:
       - mysql
       - redis
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/auth-service:/var/www/html
     ports:
@@ -151,7 +149,7 @@ services:
       - mysql
       - redis
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/tenant-service:/var/www/html
     ports:
@@ -170,7 +168,7 @@ services:
       - redis
       - rabbitmq
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/inventory-service:/var/www/html
     ports:
@@ -189,7 +187,7 @@ services:
       - redis
       - rabbitmq
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/order-service:/var/www/html
     ports:
@@ -207,7 +205,7 @@ services:
       - redis
       - rabbitmq
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/notification-service:/var/www/html
     ports:
@@ -226,7 +224,7 @@ services:
       - redis
       - rabbitmq
     environment:
-      - APP_ENV=production
+      - APP_ENV=${APP_ENV:-local}
     volumes:
       - ./services/saga-orchestrator:/var/www/html
     ports:
