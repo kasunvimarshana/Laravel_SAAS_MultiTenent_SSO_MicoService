@@ -8,12 +8,20 @@
             "Saas\\SharedKernel\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Saas\\SharedKernel\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^8.3",
+        "ramsey/uuid": "^4.7",
+        "psr/log": "^3.0",
         "illuminate/support": "^11.0",
         "illuminate/database": "^11.0",
         "illuminate/events": "^11.0",
-        "illuminate/contracts": "^11.0"
+        "illuminate/contracts": "^11.0",
+        "illuminate/pipeline": "^11.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
