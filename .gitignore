@@ -1,0 +1,42 @@
+# Composer dependencies
+vendor/
+*/vendor/
+
+# Environment files
+.env
+*/.env
+!.env.example
+*/.env.example
+
+# Laravel cache
+bootstrap/cache/
+*/bootstrap/cache/
+storage/*.key
+*/storage/*.key
+
+# Build artifacts
+node_modules/
+*/node_modules/
+public/hot
+*/public/hot
+public/storage
+*/public/storage
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.phpunit.result.cache
+*/coverage/
+*/.phpunit.result.cache
+
+# Docker override
+docker-compose.override.yml

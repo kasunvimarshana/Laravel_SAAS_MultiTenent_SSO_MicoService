@@ -1,0 +1,235 @@
+version: '3.8'
+
+networks:
+  saas_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
+  kafka_data:
+  zookeeper_data:
+
+services:
+  # ─────────────── Infrastructure ───────────────
+  mysql:
+    image: mysql:8.0
+    container_name: saas_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: saas_main
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - saas_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: saas_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - saas_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: saas_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper
+    networks:
+      - saas_network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: saas_kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka_data:/var/lib/kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - saas_network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: saas_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-password}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - saas_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────── Microservices ───────────────
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: saas_api_gateway
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=production
+      - APP_KEY=${API_GATEWAY_APP_KEY}
+    volumes:
+      - ./services/api-gateway:/var/www/html
+    ports:
+      - "8080:80"
+    networks:
+      - saas_network
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: saas_auth_service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/auth-service:/var/www/html
+    ports:
+      - "8081:80"
+    networks:
+      - saas_network
+
+  tenant-service:
+    build:
+      context: ./services/tenant-service
+      dockerfile: Dockerfile
+    container_name: saas_tenant_service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/tenant-service:/var/www/html
+    ports:
+      - "8082:80"
+    networks:
+      - saas_network
+
+  inventory-service:
+    build:
+      context: ./services/inventory-service
+      dockerfile: Dockerfile
+    container_name: saas_inventory_service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/inventory-service:/var/www/html
+    ports:
+      - "8083:80"
+    networks:
+      - saas_network
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: saas_order_service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/order-service:/var/www/html
+    ports:
+      - "8084:80"
+    networks:
+      - saas_network
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: saas_notification_service
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/notification-service:/var/www/html
+    ports:
+      - "8085:80"
+    networks:
+      - saas_network
+
+  saga-orchestrator:
+    build:
+      context: ./services/saga-orchestrator
+      dockerfile: Dockerfile
+    container_name: saas_saga_orchestrator
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./services/saga-orchestrator:/var/www/html
+    ports:
+      - "8086:80"
+    networks:
+      - saas_network
